@@ -1,2 +1,2 @@
 # PPPExercises
- In this repository, I will be uploading exercise solutions from Stroustrup's *Programming: Principls and Practice* as I complete them.
+ In this repository, I will be uploading exercise solutions from Stroustrup's *Programming: Principles and Practice* as I complete them.
