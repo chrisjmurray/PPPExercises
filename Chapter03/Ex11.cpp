@@ -46,11 +46,12 @@ void Coin::queryNumber() {
 }
 
 void Coin::printNumber() {
-    if (number > 1) {
-        cout << "You have " << number << " " << plural << "\n";;
+    if (number == 1) {
+        cout << "You have 1 " << singular << "\n";
+        
     }
     else {
-        cout << "You have 1 " << singular << "\n";
+        cout << "You have " << number << " " << plural << "\n";;
     }
 }
 
