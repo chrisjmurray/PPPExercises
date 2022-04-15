@@ -14,19 +14,19 @@
 // the user define constants (rather than just having pi and e defined as 
 // constants), you'll have to add a notation to let the user express that, for 
 // example, const pi = 3.14;.
-//  4. The get_value(), set_value(), is_declared(), and define_name() functions 
+//x  4. The get_value(), set_value(), is_declared(), and define_name() functions 
 // all operate on the variable var_table. Define a class called Symbol_table
 // with a member var_table of type vector<Variable> and member functions
 // get(), set(), is_declared(), and declare(). Rewrite the calculator to use a 
 // variable of type Symbol_table.
-//  5. Modify Token_stream::get() to return Token(print) when it sees a newline. This 
+//x  5. Modify Token_stream::get() to return Token(print) when it sees a newline. This 
 //  implies looking for whitespace characters and treating newline 
 // ('\n') specially. You might find the standard library function isspace(ch), 
 // which returns true if ch is a whitespace character, useful.
-//  6. Part of what every program should do is to provide some way of helping 
+//x  6. Part of what every program should do is to provide some way of helping 
 // its user. Have the calculator print out some instructions for how to use the 
 // calculator if the user presses the H key (both upper- and lowercase).
-//  7. Change the q and h commands to be quit and help, respectively
+//x  7. Change the q and h commands to be quit and help, respectively
 
 #include "../std_lib_facilities.h"
 
@@ -38,13 +38,19 @@ const char name = 'a';
 const char let = 'L';
 const char sqroot = 's';
 const char assign = '=';
+const char help1 = 'h';
+const char help2 = 'H';
 const string declkey = "#";
 const string sqrtkey = "sqrt";
 const string quitkey = "quit";
+const string helpkey = "help";
 const string prompt = "> ";
 const string result = "";
 const string constant = "const";
+
 //------------------------------------------------------------------------------
+
+
 class Variable {
     public:
         string name;
@@ -52,16 +58,25 @@ class Variable {
         bool constant;
 };
 
-vector<Variable> var_table;
+class Symbol_table {
+    public:
+        vector<Variable> var_table;
+        double get_value(string s);
+        void set_value(string s, double d);
+        bool is_declared(string var);
+        void define_name(string var, double val, bool isConstant);
+};
 
-double get_value(string s) //return value of the Variable named s
+Symbol_table st;
+
+double Symbol_table::get_value(string s) //return value of the Variable named s
 {
     for (const Variable& v : var_table)
         if (v.name == s) return v.value;
     error("get: undefined variable ", s);
 }
 
-void set_value(string s, double d) //set the Variable named s to d
+void Symbol_table::set_value(string s, double d) //set the Variable named s to d
 {
     for (Variable& v : var_table)
         if (v.name == s) {
@@ -72,14 +87,14 @@ void set_value(string s, double d) //set the Variable named s to d
     error("set: undefined variable ", s);
 }
 
-bool is_declared(string var) // is var alrady in var_table?
+bool Symbol_table::is_declared(string var) // is var alrady in var_table?
 {
     for (const Variable& v : var_table)
         if (v.name == var) return true;
     return false;
 }
 
-void define_name(string var, double val, bool isConstant) // add {var, val} to var_table
+void Symbol_table::define_name(string var, double val, bool isConstant) // add {var, val} to var_table
 {
     if (is_declared(var)) error(var, " declared twice");
     var_table.push_back(Variable{var, val, isConstant});
@@ -105,13 +120,17 @@ public:
     Token get();      // get a Token (get() is defined elsewhere)
     void putback(Token t);    // put a Token back
     void ignore(char c);
+    void clear_buffer();
 private:
     bool full;        // is there a Token in the buffer?
     Token buffer;     // here is where we keep a Token put back using putback()
 };
 
 //------------------------------------------------------------------------------
-
+void Token_stream::clear_buffer(){
+    full = false;
+    buffer = '0';
+}
 // The constructor just sets full to indicate that the buffer is empty:
 Token_stream::Token_stream()
     :full(false), buffer(0)    // no Token in buffer
@@ -139,7 +158,14 @@ Token Token_stream::get()
     }
 
     char ch;
-    cin >> ch;    // note that >> skips whitespace (space, newline, tab, etc.)
+    cin >> noskipws >> ch;
+    while (isspace(ch)){
+        if (ch == '\n') 
+         {
+             return Token(print);
+         }
+         cin >> noskipws >> ch;
+    }
 
     switch (ch) {
     case ';':    // for "print"
@@ -158,6 +184,8 @@ Token Token_stream::get()
     case '^':
     case ',':
         return Token(ch);        // let each character represent itself
+    case '\n':
+        return Token(print);
     case '.':
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
@@ -172,11 +200,11 @@ Token Token_stream::get()
             string s;
             s += ch;
             if (s == declkey) return Token{let};
-            
             while (cin.get(ch) && (isalpha(ch) || isdigit(ch) || ch == '_')) s += ch;
             cin.putback(ch);
             if (s == sqrtkey) return Token{sqroot};
             if (s == quitkey) return Token{quit};
+            if (s == helpkey) return Token{help1};
             return Token{name, s};
         }
         error("Bad token");
@@ -191,7 +219,7 @@ void Token_stream::ignore(char c) {
     full = false;
 
     char ch = 0;
-    while(cin >> ch){
+    while(cin >> noskipws >> ch){
         if (ch == c) return;
     }
 }
@@ -238,7 +266,7 @@ double primary()
         return t.value;   // return the number's value
     case name:
     {
-        return get_value(t.name);
+        return st.get_value(t.name);
     }
     case sqroot: 
     {
@@ -359,7 +387,7 @@ double declaration()
     if (t2.kind != '=') error("= missing in declaration of ", var_name);
 
     double d = expression();
-    define_name(var_name, d, isConstant);
+    st.define_name(var_name, d, isConstant);
     return d;
 }
 
@@ -373,7 +401,7 @@ double assignment()
     if (t2.kind != ',') error(", missing in assignment of ", var_name);
 
     double d = expression();
-    set_value(var_name, d);
+    st.set_value(var_name, d);
     return d;
 }
 
@@ -390,9 +418,17 @@ double statement()
             return expression();
     }
 }
+void help() {
+    cout << "Statements follow standard mathematical syntax. Available operations are \n";
+    cout << "*,/,+,-,^,!, (),sqrt(). Declare a variable with with keyword let or #, e.g. #x = 3.\n";
+    cout << "Precede a declaration with keyword const to make it a constant. \n";
+    cout << "statements are terminated with newline or ;. So to put multiple statements \n";
+    cout << "on one line, use the semicolon, e.g. 1+2; 3+4;\n";
+}
 //------------------------------------------------------------------------------
 void clean_up_mess() {
-    ts.ignore(print);
+    cin.clear();
+    ts.clear_buffer();
 }
 
 void calculate() {
@@ -402,6 +438,11 @@ void calculate() {
             Token t = ts.get();
             while (t.kind == print) t = ts.get();
             if (t.kind == quit) return;
+            if (t.kind == help1) {
+                help();
+                clean_up_mess();
+                continue;
+            }
             ts.putback(t);
             cout << result << statement() << '\n';
         }
@@ -414,9 +455,9 @@ void calculate() {
 int main()
 {
     try {
-        define_name("pi", 3.1415926535, true);
-        define_name("e", 2.7182818284, true);
-        define_name("k", 1000, true);
+        st.define_name("pi", 3.1415926535, true);
+        st.define_name("e", 2.7182818284, true);
+        st.define_name("k", 1000, true);
 
         calculate();
         keep_window_open();
@@ -433,6 +474,7 @@ int main()
         return 2;
     }
 }
+
 //------------------------------------------------------------------------------
 /* Testing phrases
 1+2-2*4+3/4+5!+6%3;
