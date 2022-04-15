@@ -8,7 +8,7 @@
 //x  2. Provide an assignment operator, =, so that you can change the value of a 
 // variable after you introduce it using let. Discuss why that can be useful 
 // and how it can be a source of problems.
-//  3. Provide named constants that you really can’t change the value of. Hint: 
+//x  3. Provide named constants that you really can’t change the value of. Hint: 
 // You have to add a member to Variable that distinguishes between constants and 
 // variables and check for it in set_value(). If you want to let 
 // the user define constants (rather than just having pi and e defined as 
@@ -42,7 +42,7 @@ const string declkey = "#";
 const string sqrtkey = "sqrt";
 const string quitkey = "quit";
 const string prompt = "> ";
-const string result = "\n\t";
+const string result = "";
 const string constant = "const";
 //------------------------------------------------------------------------------
 class Variable {
@@ -65,7 +65,7 @@ void set_value(string s, double d) //set the Variable named s to d
 {
     for (Variable& v : var_table)
         if (v.name == s) {
-            if (v.constant == true) error(v.name, " is a constant");
+            if (v.constant == true) error(v.name, " is a constant, cannot be reassigned");
             v.value = d;
             return;
         }
