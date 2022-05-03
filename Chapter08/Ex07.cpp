@@ -30,14 +30,29 @@ vector<int> getages(const vector<string>& names) {
     return ages;
 }
 
-void sortnamesages(vector<string>& names, vector<int>& ages) {
+void sortbyname(vector<string>& names, vector<int>& ages) {
+    //insertion sort that carries ages along for the ride
+    for(int i = 1; i < names.size(); ++i) { 
+        for(int j = i; j > 0; --j){
+            if(names[j] > names[j-1]) break;
+            string namecopy = names[j-1];
+            names[j-1] = names[j];
+            names[j] = namecopy;
+            int agecopy = ages[j-1];
+            ages[j-1] = ages[j];
+            ages[j] = agecopy;
+        }
+    }
+}
+
+void sortbyage(vector<string>& names, vector<int>& ages) {
     vector<string> namesunsorted = names;
     vector<int> agesunsorted = ages;
-    sort(names);
-    for (int i = 0; i < names.size(); ++i) {
-        for(int j = 0; j < names.size(); ++j) {
-            if (names[i] == namesunsorted[j]) {
-                ages[i] = agesunsorted[j];
+    sort(ages);
+    for (int i = 0; i < ages.size(); ++i) {
+        for(int j = 0; j < ages.size(); ++j) {
+            if (ages[i] == agesunsorted[j] && names[i] == namesunsorted[j]) {
+                names[i] = namesunsorted[j];
                 break;
             }
         }
@@ -54,6 +69,6 @@ void printpairs(const vector<string>& names, const vector<int>& ages){
 int main() {
     vector<string> names = getnames(5);
     vector<int> ages = getages(names);
-    sortnamesages(names, ages);
+    sortbyname(names, ages);
     printpairs(names, ages);
 }
