@@ -1,0 +1,79 @@
+double* means pointer to double
+more generally type* means pointer to type
+
+& address of operator, gives the pointer corresponding to a variable
+int* ptr = &var
+
+int x = 17;
+int* pi = &x;
+* on a pointer is "contents of" operator
+e.g., *pi will give you the value of the int pointed to by pi
+
+*pi = 27; OK, assign 27 to int pointed to by pi
+*pd = 3.14159; OK, assign double to double pointed to by pd
+*pd = *pi; OK, assign int to double
+
+ints do not point. pointers point. int provides arithmetic
+
+char* pc = pi; error: can't assign int* to char*
+
+don't think of char* as a thing added to char. pointers are 
+a separate entity but every type has a corresponding pointer
+
+sizeof() gives the size of an object of the type given to it, in bytes
+
+keyword new alloocates memory on the heap/free store
+double* p = new double[4]; //allocate an array 4 doubles on the free store
+p here is given the pointer to the first double
+
+-new operator returns a pointer to the allocated memory
+-a pointer value is the address of the first byte of the memory
+-A pointer points to an object of a specified type 
+-A pointer does not know how many elements it points to
+
+note: p[0] is the exact same as *p, i.e. we can access by subscript
+
+don't leave a pointer uninitialized, i.e. double* p;
+use new keyword to initialize pointers
+
+delete frees the memory for an individual object allocated by new
+delete[] p frees the memory for an array of objects allocated by new
+
+destructor: ~vector()
+                { delete[] elem;}
+compare:
+vector v(4);
+int x = v.size();
+double d = v.get(3);
+--
+vector* p = new vector(4);
+int x = p->size();
+double d = p->get(3);
+
+with a pointer to an object, access that objects members with the -> operator
+
+void* means pointer  to some memory that the compiler doesn't know the type of 
+
+void f(void* pv)
+{
+        void* pv2 = pv; // copying is OK, copying is what void*s are for
+        double* pd = pv; //error cannot convert void* to double*
+        *pv=7; //error  cannot dereference a void 
+
+        pv[2] = 9; //error cannot subscript a void*
+        int* pi = static_cast<int*>(pv); //OK explicit conversion
+        
+}
+
+reinterpret_cast can cast between unrelated types, such as int and double*
+const_cast can "cast away const"
+e.g. void f(const Buffer* p)
+    {
+        Buffer* b = const_cast<Buffer*>(p);
+    }
+
+Suggested guidelines:
+- For tiny objects prefer pass-by-value.
+- For functions where “no object” (represented by nullptr) is a valid argument use a pointer parameter (and remember to test for nullptr).
+- Otherwise, use a reference parameter
+
